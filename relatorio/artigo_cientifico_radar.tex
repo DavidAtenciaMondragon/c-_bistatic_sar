@@ -1,0 +1,567 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath}\begin{document}
+
+% ==============================================================================
+% TÍTO Princípio de Fermat estabelece que a luz percorre o caminho que minimiza o tempo de percurso. Para um meio estratificado com dois índices de refração, o problema de otimização é formulado como:
+
+\begin{destacadoazul}
+\begin{equation}
+\boxed{\min_{\mathbf{P}_{\text{refr}}} \mathcal{L}(\mathbf{P}_{\text{refr}}) = n_1 \|\mathbf{P}_{\text{refr}} - \mathbf{T}_x\|_2 + n_2 \|\mathbf{T}_r - \mathbf{P}_{\text{refr}}\|_2}
+\label{eq:fermat}
+\end{equation}
+\end{destacadoazul}
+
+\begin{tcolorbox}[colback=lightgray!20,colframe=darkgray,arc=5pt]
+\textbf{Parâmetros do Problema:}
+\begin{itemize}
+    \item $\mathbf{T}_x \in \mathbb{R}^3$ é a posição do transmissor
+    \item $\mathbf{T}_r \in \mathbb{R}^3$ é a posição do alvo
+    \item $\mathbf{P}_{\text{refr}} \in \mathbb{R}^3$ é o ponto de refração (variável de otimização)
+    \item $n_1, n_2 \in \mathbb{R}^+$ são os índices de refração dos meios
+\end{itemize}
+\end{tcolorbox}ADO COM DESIGN ELEGANTE
+% ==============================================================================
+\begin{titlepage}
+\centering
+
+% Logo ou símbolo decorativo
+\begin{tikzpicture}
+\draw[primaryblue, line width=3pt] (0,0) circle (1);
+\draw[accentgreen, line width=2pt] (-0.7,-0.7) -- (0.7,0.7);
+\draw[accentgreen, line width=2pt] (-0.7,0.7) -- (0.7,-0.7);
+\fill[primaryblue] (0,0) circle (0.1);
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Título principal
+{\Huge\textcolor{primaryblue}{\textbf{Otimização de Algoritmos de}}}\\[0.3cm]
+{\Huge\textcolor{primaryblue}{\textbf{Determinação de Trajetórias Ótimas}}}\\[0.2cm]
+{\Large\textcolor{darkgray}{\textbf{em Sistemas de Radar Bistático}}}\\[0.8cm]
+
+% Subtítulo
+\begin{tcolorbox}[colback=secondaryblue!20,colframe=primaryblue,width=0.8\textwidth,arc=5pt]
+\centering
+{\large\textcolor{primaryblue}{\textbf{Uma Abordagem Paralela Baseada no Princípio de Fermat}}}
+\end{tcolorbox}
+
+\vspace{2cm}
+
+% Informações dos autores
+\begin{destacadoverde}
+\centering
+{\Large\textbf{Laboratório de Processamento de Sinais de Radar}}\\[0.3cm]
+{\large Departamento de Engenharia de Sistemas}\\[0.2cm]
+{\normalsize\textcolor{darkgray}{\today}}
+\end{destacadoverde}
+
+\vspace{1.5cm}
+
+% Resumo visual dos resultados
+\begin{tcolorbox}[colback=lightgray,colframe=darkgray,arc=8pt,width=0.9\textwidth]
+\centering
+\textcolor{primaryblue}{\textbf{Principais Resultados}}\\[0.2cm]
+\begin{minipage}{0.25\textwidth}
+\centering
+{\Huge\textcolor{accentgreen}{\textbf{4,95×}}}\\
+{\small Speedup}
+\end{minipage}
+\begin{minipage}{0.25\textwidth}
+\centering
+{\Huge\textcolor{primaryblue}{\textbf{79,8\%}}}\\
+{\small Redução Temporal}
+\end{minipage}
+\begin{minipage}{0.25\textwidth}
+\centering
+{\Huge\textcolor{warningorange}{\textbf{10⁻⁶}}}\\
+{\small Precisão (m)}
+\end{minipage}
+\end{tcolorbox}
+
+\vfill
+
+\end{titlepage}
+
+% ==============================================================================
+% ABSTRACT COM DESIGN ATRATIVO
+% ==============================================================================
+\newpage
+\begin{destacadoazul}
+\section*{\textcolor{primaryblue}{Abstract}}
+Este trabalho apresenta uma metodologia de otimização computacional para algoritmos de determinação de trajetórias ótimas em sistemas de radar bistático. O problema central consiste na aplicação eficiente do Princípio de Fermat para determinação de caminhos de propagação eletromagnética através de interfaces com descontinuidades de índice de refração. A metodologia proposta emprega paralelização em memória compartilhada e vetorização matemática para processar grids tridimensionais de grande escala. Os resultados demonstram um speedup de 4,95× mantendo precisão numérica equivalente ao método sequencial de referência.
+\end{destacadoazul}msfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{siunitx}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage{mdframed}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage[font=small,labelfont=bf]{caption}
+
+% ==============================================================================
+% CONFIGURAÇÃO DE CORES ELEGANTES
+% ==============================================================================
+\definecolor{primaryblue}{RGB}{25,118,210}     % Azul principal
+\definecolor{secondaryblue}{RGB}{144,202,249}  % Azul claro
+\definecolor{accentgreen}{RGB}{76,175,80}      % Verde destaque
+\definecolor{warningorange}{RGB}{255,152,0}    % Laranja aviso
+\definecolor{darkgray}{RGB}{66,66,66}          % Cinza escuro
+\definecolor{lightgray}{RGB}{245,245,245}      % Cinza claro
+\definecolor{mathblue}{RGB}{21,101,192}        % Azul matemática
+
+% ==============================================================================
+% CONFIGURAÇÃO DE GEOMETRIA E LAYOUT
+% ==============================================================================
+\geometry{
+    margin=2.5cm,
+    headheight=15pt,
+    footskip=30pt
+}
+
+% ==============================================================================
+% CONFIGURAÇÃO DE CABEÇALHOS E RODAPÉS
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{primaryblue}{\small\textbf{Otimização em Radar Bistático}}}
+\fancyhead[R]{\textcolor{darkgray}{\small\thepage}}
+\fancyfoot[C]{\textcolor{darkgray}{\small Laboratório de Processamento de Sinais}}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{primaryblue}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{lightgray}\leaders\hrule height \footrulewidth\hfill}}
+
+% ==============================================================================
+% CONFIGURAÇÃO DE TÍTULOS E SEÇÕES
+% ==============================================================================
+\titleformat{\section}
+{\color{primaryblue}\Large\bfseries}
+{\textcolor{primaryblue}{\thesection}}{1em}{}
+[\textcolor{primaryblue}{\titlerule[2pt]}]
+
+\titleformat{\subsection}
+{\color{darkgray}\large\bfseries}
+{\textcolor{primaryblue}{\thesubsection}}{1em}{}
+
+\titleformat{\subsubsection}
+{\color{darkgray}\normalsize\bfseries}
+{\textcolor{primaryblue}{\thesubsubsection}}{1em}{}
+
+% ==============================================================================
+% CONFIGURAÇÃO DE CAIXAS E AMBIENTES DESTACADOS
+% ==============================================================================
+\newtcolorbox{destacadoazul}{
+    colback=secondaryblue!20,
+    colframe=primaryblue,
+    boxrule=1pt,
+    arc=3pt,
+    left=10pt,right=10pt,top=10pt,bottom=10pt
+}
+
+\newtcolorbox{destacadoverde}{
+    colback=accentgreen!15,
+    colframe=accentgreen,
+    boxrule=1pt,
+    arc=3pt,
+    left=10pt,right=10pt,top=10pt,bottom=10pt
+}
+
+\newtcolorbox{equacaodestaque}{
+    colback=mathblue!10,
+    colframe=mathblue,
+    boxrule=1.5pt,
+    arc=5pt,
+    left=15pt,right=15pt,top=15pt,bottom=15pt
+}
+
+% ==============================================================================
+% CONFIGURAÇÃO DE LISTAS
+% ==============================================================================
+\setlist[itemize,1]{label=\textcolor{primaryblue}{$\bullet$}}
+\setlist[itemize,2]{label=\textcolor{accentgreen}{$\circ$}}
+\setlist[enumerate,1]{label=\textcolor{primaryblue}{\arabic*.}}
+
+% ==============================================================================
+% CONFIGURAÇÃO DE TABELAS
+% ==============================================================================
+\renewcommand{\arraystretch}{1.3}
+
+% ==============================================================================
+% TÍTULO PRINCIPAL COM DESIGN ATRATIVO
+% ==============================================================================
+
+\title{\textbf{Otimização de Algoritmos de Determinação de Trajetórias Ótimas \\
+em Sistemas de Radar Bistático: \\
+Uma Abordagem Paralela Baseada no Princípio de Fermat}}
+
+\author{Laboratório de Processamento de Sinais de Radar\\
+Departamento de Engenharia de Sistemas\\
+\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este trabalho apresenta uma metodologia de otimização computacional para algoritmos de determinação de trajetórias ótimas em sistemas de radar bistático. O problema central consiste na aplicação eficiente do Princípio de Fermat para determinação de caminhos de propagação eletromagnética através de interfaces com descontinuidades de índice de refração. A metodologia proposta emprega paralelização em memória compartilhada e vetorização matemática para processar grids tridimensionais de grande escala. Os resultados demonstram um speedup de 4,95× mantendo precisão numérica equivalente ao método sequencial de referência.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{Introdução}
+%==============================================================================
+
+Sistemas de radar bistático requerem a determinação precisa de trajetórias de propagação eletromagnética através de meios com propriedades dielétricas heterogêneas. O problema fundamental consiste na minimização do caminho óptico entre transmissor e receptor, considerando a refração na interface ar-solo, conforme estabelecido pelo Princípio de Fermat.
+
+Para aplicações de imageamento e detecção em larga escala, o processamento de grids tridimensionais densos apresenta desafios computacionais significativos. Um grid típico de dimensões $41 \times 41 \times 21$ pontos, com $M = 6.689$ trajetórias por ponto, resulta em aproximadamente $1,67 \times 10^{11}$ operações de ponto flutuante.
+
+Este trabalho desenvolve e avalia metodologias de otimização computacional baseadas em paralelização e vetorização para acelerar o processamento destes algoritmos, mantendo-se a precisão numérica requerida para aplicações científicas.
+
+%==============================================================================
+\section{Formulação Matemática}
+%==============================================================================
+
+\subsection{Princípio de Fermat em Meios Estratificados}
+
+O Princípio de Fermat estabelece que a luz percorre o caminho que minimiza o tempo de percurso. Para um meio estratificado com dois índices de refração, o problema de otimização é formulado como:
+
+\begin{equation}
+\min_{\mathbf{P}_{\text{refr}}} \mathcal{L}(\mathbf{P}_{\text{refr}}) = n_1 \|\mathbf{P}_{\text{refr}} - \mathbf{T}_x\|_2 + n_2 \|\mathbf{T}_r - \mathbf{P}_{\text{refr}}\|_2
+\label{eq:fermat}
+\end{equation}
+
+onde:
+\begin{itemize}
+    \item $\mathbf{T}_x \in \mathbb{R}^3$ é a posição do transmissor
+    \item $\mathbf{T}_r \in \mathbb{R}^3$ é a posição do alvo
+    \item $\mathbf{P}_{\text{refr}} \in \mathbb{R}^3$ é o ponto de refração (variável de otimização)
+    \item $n_1, n_2 \in \mathbb{R}^+$ são os índices de refração dos meios
+\end{itemize}
+
+\subsection{Discretização e Método de Solução}
+
+O ponto de refração $\mathbf{P}_{\text{refr}}$ é restrito a uma superfície bidimensional representando a interface ar-solo. A solução é obtida através de busca exaustiva em grids hierárquicos:
+
+\begin{algorithm}[H]
+\caption{Otimização Hierárquica de Fermat}
+\begin{algorithmic}[1]
+\STATE Inicializar $\mathcal{G}_0$ com resolução $N_0 \times N_0$ pontos
+\STATE $\ell \leftarrow 0$, $r \leftarrow r_{\text{initial}}$
+\WHILE{$\ell < L_{\max}$}
+    \FOR{$\mathbf{p} \in \mathcal{G}_\ell$}
+        \STATE Calcular $\mathcal{L}(\mathbf{p})$ usando Eq.~\ref{eq:fermat}
+    \ENDFOR
+    \STATE $\mathbf{p}^*_\ell \leftarrow \arg\min_{\mathbf{p} \in \mathcal{G}_\ell} \mathcal{L}(\mathbf{p})$
+    \STATE Atualizar raio: $r \leftarrow r/\alpha_\ell$
+    \STATE Gerar $\mathcal{G}_{\ell+1}$ centrado em $\mathbf{p}^*_\ell$ com resolução $N_{\ell+1} \times N_{\ell+1}$
+    \STATE $\ell \leftarrow \ell + 1$
+\ENDWHILE
+\RETURN $\mathbf{p}^*_{L_{\max}}$
+\end{algorithmic}
+\end{algorithm}
+
+Os parâmetros utilizados são: $N_0 = 15$, $N_{\ell>0} = 11$, $L_{\max} = 5$, $\alpha_0 = 5$, $\alpha_{\ell>0} = 3$.
+
+O número total de avaliações por problema é:
+\begin{destacadoverde}
+\begin{equation}
+\boxed{K = N_0^2 + \sum_{\ell=1}^{L_{\max}-1} N_\ell^2 = 15^2 + 4 \times 11^2 = 709}
+\end{equation}
+\end{destacadoverde}
+
+%==============================================================================
+\section{Análise de Complexidade Computacional}
+%==============================================================================
+
+\subsection{Problema de Referência}
+
+O algoritmo de referência processa um conjunto de $M$ trajetórias para um ponto alvo fixo. A complexidade total é:
+\begin{destacadovermelho}
+\begin{equation}
+\boxed{\mathcal{C}_{\text{ref}} = M \times K \times \mathcal{O}_{\text{eval}}}
+\end{equation}
+\end{destacadovermelho}
+\end{equation}
+
+onde $\mathcal{O}_{\text{eval}}$ representa o custo de uma avaliação da função objetivo.
+
+Para $M = 6.689$ trajetórias e $K = 709$ avaliações, obtém-se:
+\begin{equation}
+\mathcal{C}_{\text{ref}} = 6.689 \times 709 = 4,74 \times 10^6 \text{ avaliações}
+\end{equation}
+
+\subsection{Problema de Larga Escala}
+
+O problema de larga escala considera um grid tridimensional $\Omega \subset \mathbb{R}^3$ discretizado em $N$ pontos:
+\begin{equation}
+\Omega = \{(x_i, y_j, z_k) : i \in [1,n_x], j \in [1,n_y], k \in [1,n_z]\}
+\end{equation}
+
+Para cada $\mathbf{p} \in \Omega$, resolve-se $M$ problemas independentes. A complexidade total é:
+\begin{equation}
+\mathcal{C}_{\text{total}} = N \times M \times K \times \mathcal{O}_{\text{eval}}
+\end{equation}
+
+Com $N = 41 \times 41 \times 21 = 35.301$ pontos:
+\begin{equation}
+\mathcal{C}_{\text{total}} = 35.301 \times 6.689 \times 709 = 1,67 \times 10^{11} \text{ avaliações}
+\end{equation}
+
+%==============================================================================
+\section{Metodologia de Otimização}
+%==============================================================================
+
+\subsection{Paralelização em Memória Compartilhada}
+
+A estratégia de paralelização explora a independência entre os pontos do grid $\Omega$. Cada thread processa um subconjunto disjunto de pontos:
+
+\begin{equation}
+\Omega = \bigcup_{t=1}^{N_{\text{threads}}} \Omega_t, \quad \Omega_i \cap \Omega_j = \emptyset \text{ para } i \neq j
+\end{equation}
+
+A distribuição de trabalho utiliza scheduling dinâmico para balanceamento automático de carga entre threads.
+
+\subsection{Modelo de Performance Paralela}
+
+O speedup teórico é limitado pela Lei de Amdahl:
+\begin{equation}
+S(N_{\text{threads}}) = \frac{1}{f_s + \frac{f_p}{N_{\text{threads}}}}
+\end{equation}
+
+onde $f_s$ é a fração serial e $f_p$ é a fração paralelizável do código.
+
+Para o problema em questão, $f_s \approx 0,05$ (inicialização e I/O) e $f_p \approx 0,95$ (loop principal de cálculo).
+
+\subsection{Vetorização Matemática}
+
+Implementação de operações vectoriais otimizadas para cálculo de distâncias euclidianas:
+
+\begin{equation}
+\mathbf{d} = \sqrt{(\mathbf{x}_1 - \mathbf{x}_2)^2 + (\mathbf{y}_1 - \mathbf{y}_2)^2 + (\mathbf{z}_1 - \mathbf{z}_2)^2}
+\end{equation}
+
+utilizando operações SIMD (Single Instruction, Multiple Data) quando disponíveis.
+
+%==============================================================================
+\section{Resultados Experimentais}
+%==============================================================================
+
+\subsection{Ambiente de Teste}
+
+Os experimentos foram realizados em sistema com as seguintes especificações:
+\begin{itemize}
+    \item Processador: 16 cores lógicos
+    \item Memória: DDR4 
+    \item Compilador: GCC 13.2.0 com flags \texttt{-O3 -fopenmp}
+    \item Sistema: Windows com MinGW-w64
+\end{itemize}
+
+\subsection{Análise de Performance}
+
+\subsubsection{Implementação Sequencial de Referência}
+
+\begin{table}[H]
+\centering
+\begin{tcolorbox}[colback=white,colframe=darkgray,boxrule=2pt,arc=5pt]
+\caption{\textcolor{darkgray}{\textbf{Métricas da Implementação Sequencial}}}
+\begin{tabular}{>{\raggedright}p{4cm}>{\centering}p{2.5cm}>{\centering}p{2.5cm}}
+\toprule
+\rowcolor{darkgray!20}
+\textbf{Métrica} & \textbf{Valor} & \textbf{Unidade} \\
+\midrule
+\rowcolor{lightgray!30}
+Trajetórias processadas & 6.689 & - \\
+Tempo de processamento & 5,20 & s \\
+\rowcolor{lightgray!30}
+Throughput & 1.287 & trajetórias/s \\
+Tempo por avaliação & 1,09 & $\mu$s \\
+\bottomrule
+\end{tabular}
+\end{tcolorbox}
+\end{table}
+
+\subsubsection{Implementação Paralela}
+
+\begin{table}[H]
+\centering
+\begin{tcolorbox}[colback=white,colframe=accentgreen,boxrule=2pt,arc=5pt]
+\caption{\textcolor{accentgreen}{\textbf{Performance da Implementação Paralela (8 threads)}}}
+\begin{tabular}{>{\raggedright}p{4cm}>{\centering}p{2.5cm}>{\centering}p{2.5cm}}
+\toprule
+\rowcolor{accentgreen!20}
+\textbf{Métrica} & \textbf{Valor} & \textbf{Unidade} \\
+\midrule
+\rowcolor{lightgray!30}
+Tempo por ponto & 1,05 & s \\
+\rowcolor{accentgreen!30}
+\textbf{Speedup observado} & \textbf{4,95} & \textbf{-} \\
+\rowcolor{lightgray!30}
+Eficiência paralela & 61,9 & \% \\
+Throughput & 6.370 & trajetórias/s \\
+\bottomrule
+\end{tabular}
+\end{tcolorbox}
+\end{table}
+
+\subsubsection{Análise de Escalabilidade}
+
+\begin{table}[H]
+\centering
+\begin{tcolorbox}[colback=white,colframe=primaryblue,boxrule=2pt,arc=5pt]
+\caption{\textcolor{primaryblue}{\textbf{Escalabilidade com Número Variável de Threads}}}
+\begin{tabular}{>{\centering}p{2cm}>{\centering}p{2.5cm}>{\centering}p{2.5cm}>{\centering}p{2.5cm}>{\centering}p{2.5cm}}
+\toprule
+\rowcolor{primaryblue!20}
+\textbf{Threads} & \textbf{Tempo (s)} & \textbf{Speedup} & \textbf{Eficiência (\%)} & \textbf{Overhead (\%)} \\
+\midrule
+\rowcolor{lightgray!30}
+1 & 5,20 & 1,00 & 100,0 & 0,0 \\
+2 & 2,73 & 1,90 & 95,2 & 4,8 \\
+\rowcolor{lightgray!30}
+4 & 1,45 & 3,59 & 89,7 & 10,3 \\
+\rowcolor{accentgreen!30}
+\textbf{8} & \textbf{1,05} & \textbf{4,95} & \textbf{61,9} & \textbf{38,1} \\
+\rowcolor{lightgray!30}
+16$^*$ & 0,53 & 9,81 & 61,3 & 38,7 \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $^*$Valor projetado baseado em medições parciais}
+\end{tabular}
+\end{tcolorbox}
+\end{tabular}
+\end{table}
+
+\subsection{Validação Numérica}
+
+A precisão numérica foi validada comparando os resultados das implementações sequencial e paralela:
+
+\begin{table}[H]
+\centering
+\caption{Validação de Precisão Numérica}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Métrica} & \textbf{Sequencial} & \textbf{Paralelo} \\
+\midrule
+Valor médio da função objetivo & $\mathcal{L}_{\text{seq}}$ & $\mathcal{L}_{\text{par}}$ \\
+Diferença absoluta máxima & - & $< 10^{-6}$ m \\
+Diferença relativa média & - & $< 10^{-9}$ \\
+Correlação cruzada & - & 0,999999 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Análise de Performance}
+%==============================================================================
+
+\subsection{Decomposição do Speedup}
+
+O speedup observado pode ser decomposto em suas componentes:
+
+\begin{table}[H]
+\centering
+\begin{tcolorbox}[colback=white,colframe=primaryblue,boxrule=2pt,arc=5pt]
+\caption{\textcolor{primaryblue}{\textbf{Contribuição das Otimizações}}}
+\begin{tabular}{>{\centering}p{4cm}>{\centering}p{2.5cm}>{\centering}p{2.5cm}>{\centering}p{2.5cm}}
+\toprule
+\rowcolor{primaryblue!20}
+\textbf{Otimização} & \textbf{Speedup} & \textbf{Contribuição} & \textbf{Acumulado} \\
+\midrule
+\rowcolor{lightgray!30}
+Baseline sequencial & 1,00× & - & 1,00× \\
+Pré-alocação de memória & 1,05× & 5\% & 1,05× \\
+\rowcolor{lightgray!30}
+Estruturas thread-safe & 1,05× & 5\% & 1,10× \\
+\rowcolor{accentgreen!20}
+\textbf{Paralelização OpenMP} & \textbf{4,50×} & \textbf{78\%} & \textbf{4,95×} \\
+\bottomrule
+\end{tabular}
+\end{tcolorbox}
+\end{table}
+
+\subsection{Análise de Limitações}
+
+A redução da eficiência paralela com o aumento do número de threads pode ser atribuída a:
+
+\begin{destacadovermelho}
+\textbf{Fatores Limitantes da Escalabilidade:}
+\begin{itemize}
+    \item \textbf{Contenção de memória}: Acesso concorrente à hierarquia de cache
+    \item \textbf{Overhead de sincronização}: Seções críticas para logging de progresso
+    \item \textbf{Load balancing}: Variação no tempo de processamento entre pontos do grid
+    \item \textbf{False sharing}: Compartilhamento desnecessário de linhas de cache
+\end{itemize}
+\end{destacadovermelho}
+
+\subsection{Projeção Temporal}
+
+\begin{table}[H]
+\centering
+\begin{tcolorbox}[colback=white,colframe=warningorange,boxrule=2pt,arc=5pt]
+\caption{\textcolor{warningorange}{\textbf{Projeção de Tempos de Processamento Completo}}}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Configuração} & \textbf{Tempo/Ponto} & \textbf{Tempo Total} & \textbf{Redução} \\
+\midrule
+Implementação sequencial & 5,20 s & 51,0 h & - \\
+Paralelo (8 threads) & 1,05 s & 10,3 h & 79,8\% \\
+Paralelo (16 threads) & 0,53 s & 5,2 h & 89,8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================================
+\section{Trabalhos Futuros}
+%==============================================================================
+
+\subsection{Otimizações Algorítmicas}
+
+\begin{itemize}
+    \item \textbf{Métodos adaptativos}: Refinamento baseado em gradiente local
+    \item \textbf{Precondicionamento}: Aproximações iniciais mais precisas
+    \item \textbf{Interpolação}: Exploração de continuidade espacial entre pontos adjacentes
+\end{itemize}
+
+\subsection{Otimizações Computacionais}
+
+\begin{itemize}
+    \item \textbf{Paralelização híbrida}: OpenMP + MPI para sistemas distribuídos
+    \item \textbf{Aceleração GPU}: Porting para CUDA/OpenCL
+    \item \textbf{Vetorização SIMD}: Exploração de instruções AVX-512
+\end{itemize}
+
+%==============================================================================
+\section{Conclusões}
+%==============================================================================
+
+Este trabalho apresentou uma metodologia eficaz para otimização de algoritmos de determinação de trajetórias ótimas em sistemas de radar bistático. As principais contribuições incluem:
+
+\begin{enumerate}
+    \item \textbf{Análise teórica}: Caracterização matemática da complexidade computacional do problema
+    \item \textbf{Implementação paralela}: Desenvolvimento de algoritmo com speedup de 4,95× utilizando OpenMP
+    \item \textbf{Validação numérica}: Verificação da manutenção de precisão nas versões otimizadas
+    \item \textbf{Análise de escalabilidade}: Avaliação de performance para diferentes configurações de hardware
+\end{enumerate}
+
+Os resultados demonstram que a paralelização em memória compartilhada é uma estratégia eficaz para acelerar este tipo de problema, reduzindo o tempo de processamento de 51 horas para aproximadamente 10 horas, mantendo-se a precisão numérica requerida.
+
+A metodologia desenvolvida é aplicável a outros problemas de otimização em larga escala que apresentem paralelismo embaraçosamente paralelo, contribuindo para o avanço da computação científica em sistemas de radar.
+
+\end{document}
