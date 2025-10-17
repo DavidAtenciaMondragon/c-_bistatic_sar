@@ -87,7 +87,7 @@ public:
     }
 
     static void logProgress(const std::string& message) {
-        setColor(BLUE);
+        setColor(WHITE);
         std::cout << "[PROGRESS] ";
         resetColor();
         std::cout << message << std::endl;

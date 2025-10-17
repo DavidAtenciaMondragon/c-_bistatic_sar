@@ -2,7 +2,7 @@
 echo === Radar Project Compilation Script ===
 
 echo Step 1: Checking current directory...
-cd /d "C:\Users\David\Desktop\implementacao_c++\gs"
+cd /d "C:\Users\David\Desktop\implementacao_c++\core"
 echo Current directory: %CD%
 
 echo.

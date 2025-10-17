@@ -71,10 +71,11 @@ TrajectoryMatrix prepareTrajectoryData(const TrajectoryPoints& trajTx,
     traj.P[1] = target.pos[1];
     traj.P[2] = target.pos[2];
     
-    std::cout << "Trajectory data prepared:" << std::endl;
-    std::cout << "  Tx positions: " << traj.Tx.size() << std::endl;
-    std::cout << "  Rx positions: " << traj.Rx.size() << std::endl;
-    std::cout << "  Target: [" << traj.P[0] << ", " << traj.P[1] << ", " << traj.P[2] << "]" << std::endl;
+    // DEBUG: Comentado para evitar logs mezclados en procesamiento paralelo
+    // std::cout << "Trajectory data prepared:" << std::endl;
+    // std::cout << "  Tx positions: " << traj.Tx.size() << std::endl;
+    // std::cout << "  Rx positions: " << traj.Rx.size() << std::endl;
+    // std::cout << "  Target: [" << traj.P[0] << ", " << traj.P[1] << ", " << traj.P[2] << "]" << std::endl;
     
     return traj;
 }
@@ -99,10 +100,11 @@ TrajectoryMatrix prepareTrajectoryData(const std::vector<std::vector<double>>& T
     traj.Rx = Rx;
     traj.P = target_pos;
     
-    std::cout << "Trajectory data prepared:" << std::endl;
-    std::cout << "  Tx positions: " << Tx.size() << std::endl;
-    std::cout << "  Rx positions: " << Rx.size() << std::endl;
-    std::cout << "  Target: [" << target_pos[0] << ", " << target_pos[1] << ", " << target_pos[2] << "]" << std::endl;
+    // DEBUG: Comentado para evitar logs mezclados en procesamiento paralelo
+    // std::cout << "Trajectory data prepared:" << std::endl;
+    // std::cout << "  Tx positions: " << Tx.size() << std::endl;
+    // std::cout << "  Rx positions: " << Rx.size() << std::endl;
+    // std::cout << "  Target: [" << target_pos[0] << ", " << target_pos[1] << ", " << target_pos[2] << "]" << std::endl;
     
     return traj;
 }
@@ -117,7 +119,8 @@ RangeData calculaSlantRangeFermat(const ProcessedDEM& demData,
     // [TIMER] Iniciar medicion de tiempo
     auto start_time = std::chrono::high_resolution_clock::now();
     
-    LOG_INFO("> Calculating ranges using Fermat's principle...");
+    // DEBUG: Comentado para evitar logs mezclados en procesamiento paralelo
+    // LOG_INFO("> Calculating ranges using Fermat's principle...");
     
     size_t nPoints = trajectories.Tx.size();
     RangeData ranges;
@@ -353,7 +356,7 @@ RawDataResult processRawData(const TrajectoryMatrix& trajectories,
 
         // Show t, rngBin and phi for first few points for verification (one line)
         // if (nPoints <= 10 || i < 10) {
-            LOG_DEBUG("? Point " + std::to_string(i) + ": t=" + std::to_string(t*1e9) + " ns, rngBin=" + std::to_string(rngBin) + ", phi=" + std::to_string(phi) + " rad");
+        //    LOG_DEBUG("? Point " + std::to_string(i) + ": t=" + std::to_string(t*1e9) + " ns, rngBin=" + std::to_string(rngBin) + ", phi=" + std::to_string(phi) + " rad");
         // }
     }
     
