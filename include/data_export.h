@@ -46,6 +46,26 @@ void exportVector(const std::string& filename,
                  const std::vector<double>& data);
 
 /**
+ * @brief Export 3D complex matrix (SAR output) to binary file
+ * 
+ * Saves the 3D complex matrix from back projection processing
+ * Format: Binary file with header containing dimensions and complex data
+ * 
+ * @param filename Output binary file path
+ * @param output3D 3D matrix with dimensions [nx][ny][nz] containing complex values
+ * @param nx X dimension size
+ * @param ny Y dimension size  
+ * @param nz Z dimension size
+ * @param gridInfo Optional grid coordinate information for metadata
+ */
+void export3DComplexMatrix(const std::string& filename,
+                          const std::vector<std::vector<std::vector<std::complex<double>>>>& output3D,
+                          size_t nx, size_t ny, size_t nz,
+                          const std::vector<double>& grid_x = {},
+                          const std::vector<double>& grid_y = {},
+                          const std::vector<double>& grid_z = {});
+
+/**
  * @brief Generate processing summary report
  */
 void generateProcessingReport(const std::string& outputDir,

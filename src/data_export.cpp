@@ -177,6 +177,137 @@ void exportVector(const std::string& filename,
     file.close();
 }
 
+void export3DComplexMatrix(const std::string& filename,
+                          const std::vector<std::vector<std::vector<std::complex<double>>>>& output3D,
+                          size_t nx, size_t ny, size_t nz,
+                          const std::vector<double>& grid_x,
+                          const std::vector<double>& grid_y,
+                          const std::vector<double>& grid_z) {
+    
+    // Validar dimensiones
+    if (output3D.size() != nx || 
+        (nx > 0 && output3D[0].size() != ny) || 
+        (nx > 0 && ny > 0 && output3D[0][0].size() != nz)) {
+        LOG_ERROR("Error: Dimensiones de matriz 3D no coinciden con parámetros especificados");
+        LOG_ERROR("Esperado: " + std::to_string(nx) + "x" + std::to_string(ny) + "x" + std::to_string(nz));
+        LOG_ERROR("Recibido: " + std::to_string(output3D.size()) + "x" + 
+                 std::to_string(output3D.empty() ? 0 : output3D[0].size()) + "x" + 
+                 std::to_string(output3D.empty() || output3D[0].empty() ? 0 : output3D[0][0].size()));
+        return;
+    }
+    
+    // Open binary file for writing
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        LOG_ERROR("Error: No se pudo abrir archivo " + filename);
+        return;
+    }
+    
+    try {
+        // Matrix dimensions - 3D matrix
+        uint32_t numDimensions = 3;  // 3D matrix
+        uint64_t dim_x = static_cast<uint64_t>(nx);
+        uint64_t dim_y = static_cast<uint64_t>(ny);
+        uint64_t dim_z = static_cast<uint64_t>(nz);
+        uint64_t totalElements = dim_x * dim_y * dim_z;
+        
+        // Header information
+        uint32_t isComplex = 1;  // Complex data
+        std::string dataTypeStr = "double";
+        uint32_t dataTypeLen = static_cast<uint32_t>(dataTypeStr.length());
+        
+        // Write header
+        // 1. Number of dimensions (uint32)
+        file.write(reinterpret_cast<const char*>(&numDimensions), sizeof(uint32_t));
+        
+        // 2. Complexity flag (uint32): 0=Real, 1=Complex
+        file.write(reinterpret_cast<const char*>(&isComplex), sizeof(uint32_t));
+        
+        // 3. Data type string length (uint32)
+        file.write(reinterpret_cast<const char*>(&dataTypeLen), sizeof(uint32_t));
+        
+        // 4. Data type string (char[16] fixed, padded with nulls)
+        char fixedDataType[16] = {0};  // Initialize with nulls
+        strncpy(fixedDataType, dataTypeStr.c_str(), std::min(dataTypeStr.length(), size_t(15)));
+        file.write(fixedDataType, 16);
+        
+        // 5. Write dimensions (uint64[]) - X, Y, Z order
+        file.write(reinterpret_cast<const char*>(&dim_x), sizeof(uint64_t));
+        file.write(reinterpret_cast<const char*>(&dim_y), sizeof(uint64_t));
+        file.write(reinterpret_cast<const char*>(&dim_z), sizeof(uint64_t));
+        
+        // 6. Write data (interleaved Real-Imaginary for complex)
+        // Order: x varies first, then y, then z (matching C++ array layout)
+        size_t elementsWritten = 0;
+        for (size_t x = 0; x < nx; x++) {
+            for (size_t y = 0; y < ny; y++) {
+                for (size_t z = 0; z < nz; z++) {
+                    double realPart = output3D[x][y][z].real();
+                    double imagPart = output3D[x][y][z].imag();
+                    
+                    // Write real part
+                    file.write(reinterpret_cast<const char*>(&realPart), sizeof(double));
+                    // Write imaginary part
+                    file.write(reinterpret_cast<const char*>(&imagPart), sizeof(double));
+                    
+                    elementsWritten++;
+                }
+            }
+        }
+        
+        LOG_SUCCESS("✅ Matriz 3D compleja exportada: " + filename);
+        LOG_INFO("   Dimensiones: " + std::to_string(nx) + "x" + std::to_string(ny) + "x" + std::to_string(nz));
+        LOG_INFO("   Elementos escritos: " + std::to_string(elementsWritten) + "/" + std::to_string(totalElements));
+        LOG_INFO("   Tipo: double (Complex, R-I interleaved)");
+        
+        // Calcular estadísticas básicas si es necesario
+        if (elementsWritten > 0) {
+            double min_magnitude = std::numeric_limits<double>::max();
+            double max_magnitude = 0.0;
+            double sum_magnitude = 0.0;
+            size_t non_zero_count = 0;
+            
+            for (size_t x = 0; x < nx; x++) {
+                for (size_t y = 0; y < ny; y++) {
+                    for (size_t z = 0; z < nz; z++) {
+                        double mag = std::abs(output3D[x][y][z]);
+                        if (mag > 1e-15) {
+                            non_zero_count++;
+                            min_magnitude = std::min(min_magnitude, mag);
+                            sum_magnitude += mag;
+                        }
+                        max_magnitude = std::max(max_magnitude, mag);
+                    }
+                }
+            }
+            
+            LOG_INFO("   Estadísticas: " + std::to_string(non_zero_count) + " valores no-cero");
+            if (non_zero_count > 0) {
+                LOG_INFO("   Rango magnitud: [" + std::to_string(min_magnitude) + ", " + std::to_string(max_magnitude) + "]");
+                LOG_INFO("   Magnitud promedio: " + std::to_string(sum_magnitude / non_zero_count));
+            }
+        }
+        
+        // Opcional: Exportar también coordenadas del grid si están disponibles
+        if (!grid_x.empty() && !grid_y.empty() && !grid_z.empty()) {
+            std::string baseFilename = filename.substr(0, filename.find_last_of('.'));
+            
+            exportVector(baseFilename + "_grid_x.csv", grid_x);
+            exportVector(baseFilename + "_grid_y.csv", grid_y);
+            exportVector(baseFilename + "_grid_z.csv", grid_z);
+            
+            LOG_INFO("   Coordenadas del grid exportadas como archivos CSV separados");
+        }
+        
+    } catch (const std::exception& e) {
+        LOG_ERROR("Error escribiendo archivo binario 3D: " + std::string(e.what()));
+        file.close();
+        return;
+    }
+    
+    file.close();
+}
+
 void generateProcessingReport(const std::string& outputDir,
                              const RadarTx& radarTx,
                              const RadarRx& radarRx,
