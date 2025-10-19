@@ -425,7 +425,7 @@ int main() {
         LOG_INFO("Número de threads disponibles: " + std::to_string(omp_get_max_threads()));
         
         // Set OpenMP threads for optimal performance
-        omp_set_num_threads(std::min(omp_get_max_threads(), 8)); // Limit to avoid context switching
+        omp_set_num_threads(std::min(omp_get_max_threads(), 12)); // Limit to avoid context switching
         
         // Pre-allocate results vectors with proper size
         allRanges.resize(totalGridPoints);
@@ -438,17 +438,19 @@ int main() {
         
         LOG_INFO("Grid coordinates generadas: " + std::to_string(flat_grid_coords.size()) + " puntos");
         
-        // DEBUG: Procesar solo los primeros 8 puntos del grid (comentar las siguientes 3 líneas para procesamiento completo)
-        size_t debug_limit = std::min(flat_grid_coords.size(), static_cast<size_t>(8));
-        LOG_INFO("DEBUG MODE: Procesando solo los primeros " + std::to_string(debug_limit) + " puntos del grid");
-        // Comentar la línea anterior para procesamiento completo
+        // PROCESAMIENTO COMPLETO DEL GRID
+        // Cambiar estas líneas si quieres modo debug (solo 8 puntos):
+        // size_t debug_limit = std::min(flat_grid_coords.size(), static_cast<size_t>(8));
+        // LOG_INFO("DEBUG MODE: Procesando solo los primeros " + std::to_string(debug_limit) + " puntos del grid");
+        
+        LOG_INFO("FULL PROCESSING: Procesando todo el grid (" + std::to_string(flat_grid_coords.size()) + " puntos)");
         
         auto parallel_start = std::chrono::high_resolution_clock::now();
         
         // PARALLEL PROCESSING with OpenMP - REAL PERFORMANCE BOOST
         #pragma omp parallel for schedule(dynamic, 1) shared(allRanges, allReflections, allRefractions, flat_grid_coords, Tx, Rx, processedDEM, strEnvironment)
-        // for (size_t coord_idx = 0; coord_idx < flat_grid_coords.size(); coord_idx++) {  // Procesamiento completo
-        for (size_t coord_idx = 0; coord_idx < debug_limit; coord_idx++) {  // DEBUG: Solo primeros 8 puntos
+        for (size_t coord_idx = 0; coord_idx < flat_grid_coords.size(); coord_idx++) {  // Procesamiento completo
+        // for (size_t coord_idx = 0; coord_idx < debug_limit; coord_idx++) {  // DEBUG: Solo primeros 8 puntos (comentado)
             
             // Each thread needs its own target structure to avoid race conditions
             Target local_strTarget = initializeTarget();
@@ -783,9 +785,9 @@ int main() {
             {
                 static size_t processed_count = 0;
                 processed_count++;
-                size_t total_to_process = std::min(flat_grid_coords.size(), static_cast<size_t>(8)); // DEBUG: usar debug_limit
-                // size_t total_to_process = totalGridPoints; // Descomentar para procesamiento completo
-                if (processed_count % 4 == 0 || processed_count >= total_to_process) { // DEBUG: reporte cada 4 puntos
+                size_t total_to_process = totalGridPoints; // Procesamiento completo
+                // size_t total_to_process = std::min(flat_grid_coords.size(), static_cast<size_t>(8)); // DEBUG: usar debug_limit (comentado)
+                if (processed_count % 1000 == 0 || processed_count >= total_to_process) { // Reporte cada 1000 puntos para evitar spam
                     double progress = (double)processed_count / total_to_process * 100.0;
                     LOG_PROGRESS("Parallel processing: " + std::to_string(processed_count) + "/" + 
                                std::to_string(total_to_process) + " (" + 
@@ -798,8 +800,8 @@ int main() {
         auto parallel_end = std::chrono::high_resolution_clock::now();
         auto parallel_duration = std::chrono::duration_cast<std::chrono::milliseconds>(parallel_end - parallel_start);
         
-        size_t points_processed = std::min(flat_grid_coords.size(), static_cast<size_t>(8)); // DEBUG
-        // size_t points_processed = totalGridPoints; // Descomentar para procesamiento completo
+        size_t points_processed = totalGridPoints; // Procesamiento completo
+        // size_t points_processed = std::min(flat_grid_coords.size(), static_cast<size_t>(8)); // DEBUG (comentado)
         
         LOG_PERF("Procesamiento paralelo completado en: " + std::to_string(parallel_duration.count()) + " ms");
         LOG_PERF("Tiempo promedio por punto: " + std::to_string((double)parallel_duration.count() / points_processed) + " ms");

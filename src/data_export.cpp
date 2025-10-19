@@ -237,17 +237,17 @@ void export3DComplexMatrix(const std::string& filename,
         file.write(reinterpret_cast<const char*>(&dim_z), sizeof(uint64_t));
         
         // 6. Write data (interleaved Real-Imaginary for complex)
-        // Order: x varies first, then y, then z (matching C++ array layout)
+        //  reshape(vector, [nx, ny, nz]) fills in order: x varies first (fastest), then y, then z
         size_t elementsWritten = 0;
-        for (size_t x = 0; x < nx; x++) {
-            for (size_t y = 0; y < ny; y++) {
-                for (size_t z = 0; z < nz; z++) {
+        for (size_t z = 0; z < nz; z++) {       // Z varies slowest (outermost loop)
+            for (size_t y = 0; y < ny; y++) {   // Y varies middle
+                for (size_t x = 0; x < nx; x++) {   // X varies fastest (innermost loop)
                     double realPart = output3D[x][y][z].real();
                     double imagPart = output3D[x][y][z].imag();
                     
                     // Write real part
                     file.write(reinterpret_cast<const char*>(&realPart), sizeof(double));
-                    // Write imaginary part
+                    // Write imaginary part  
                     file.write(reinterpret_cast<const char*>(&imagPart), sizeof(double));
                     
                     elementsWritten++;
@@ -255,7 +255,7 @@ void export3DComplexMatrix(const std::string& filename,
             }
         }
         
-        LOG_SUCCESS("✅ Matriz 3D compleja exportada: " + filename);
+        LOG_SUCCESS(" Matriz 3D compleja exportada: " + filename);
         LOG_INFO("   Dimensiones: " + std::to_string(nx) + "x" + std::to_string(ny) + "x" + std::to_string(nz));
         LOG_INFO("   Elementos escritos: " + std::to_string(elementsWritten) + "/" + std::to_string(totalElements));
         LOG_INFO("   Tipo: double (Complex, R-I interleaved)");
